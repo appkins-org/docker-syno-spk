@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# bashrc file for the hb-shell command
+
+. "/var/packages/docker/target/app/source.sh"
+. "/var/packages/docker/target/app/bashrc"

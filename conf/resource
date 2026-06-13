@@ -1,0 +1,20 @@
+{
+  "systemd-user-unit": {},
+  "data-share": {
+    "shares": [{
+      "name": "docker",
+      "permission": {
+        "rw": ["docker"]
+      }
+    }]
+  },
+  "usr-local-linker": {
+    "bin": [
+      "app/hb-shell",
+      "app/hb-service"
+    ]
+  },
+  "port-config": {
+    "protocol-file": "app/docker.sc"
+  }
+}

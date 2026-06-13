@@ -1,0 +1,196 @@
+name: Build and Publish
+run-name: Build and Publish ${{ github.event.inputs.version }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version / Tag (x.x.x):'     
+        required: true
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.event.inputs.version }}
+          release_name: ${{ github.event.inputs.version }}
+          prerelease: true
+          body: |
+            **For DSM 7.x.x only.**
+
+            **This package does not use Docker. If you are currently running Homebridge in Docker, [create a backup](https://github.com/homebridge/homebridge/wiki/Backup-and-Restore) and remove the container before installing this package.**
+
+            ### Breaking Changes
+
+            :warning: Version v3.x.x contains breaking changes for users upgrading from v2.x.x or earlier. **Plugins will require re-installation.** You should [create a backup](https://github.com/homebridge/homebridge/wiki/Backup-and-Restore) before upgrading.
+
+            ### Supported Models
+
+            * **x86_64** - All 64 bit Intel / AMD CPU Models ( braswell )
+            * **evansport** (i686) - DS214play, DS414play, DS415play ( evansport )
+            * **rtd1296** (armv8) - DS420j, DS220j, RS819, DS418, DS218, DS218play, DS118
+            * **rtd1619b** (armv8) - DS124, DS223, DS223j, DS423
+            * **armada37xx** (armv8) - DS120j, DS119j
+            * **armada38x** (armv7) - DS419slim, DS218j, RS217, RS816, DS416j, DS416slim, DS216, DS216j, DS116
+            * **alpine** (armv7) - DS1817, DS1517, DS416, DS2015xs, DS1515, DS715, DS215+
+
+            ### Installation
+
+            This package will deploy Homebridge and the Homebridge UI natively on your Synology NAS. It will create a new shared named `homebridge` to store the Homebridge configuration and user data.
+
+            #### Dependencies
+
+            This package will leverage the Synology supplied NodeJS v20 package.
+            
+            #### Add the Homebridge Synology Package Source:
+
+            1. Open Package Center in DSM and select the `Settings` option.
+            2. Select the `Package Sources` tab.
+            3. Click `Add`
+            4. In the `Name` section enter `Homebridge`
+            5. In the `Location` section enter `https://synology.homebridge.io`
+            6. Click `OK`
+
+            #### Install Homebridge:
+
+            1. Go back to Package Center and search for `Homebridge`
+            2. Click on the `Homebridge` package then select `Install`
+            3. Click `Agree` when warned about using a package from an unknown publisher.
+            4. Click `Done` to confirm installation. 
+
+            *Please note low power device make take 10-15 minutes to install the package.*
+
+            The Homebridge UI app starts on port `8581`. The default username is **admin** with password **admin**.
+
+            If you have the Synology Firewall enabled, make a rule to allow access to port 8581 and the port Homebridge was assigned too.
+
+            ### Recommended Post-Install Steps:
+
+            * [Enable compiling native modules](https://github.com/appkins-org/docker-syno-spk/wiki/DSM-7:-Enable-Compiling-Of-Native-Modules)
+            * [Install ffmpeg with libfdk_aac](https://github.com/appkins-org/docker-syno-spk/wiki/DSM-7:-ffmpeg-with-libfdk_aac)
+            * [Install git](https://github.com/appkins-org/docker-syno-spk/wiki/DSM-7:-Install-git)
+
+            ---
+
+            <span align="center">
+
+            *If you like the [Homebridge UI](https://github.com/homebridge/homebridge-config-ui-x) or the [Homebridge Synology Package Installer](https://github.com/appkins-org/docker-syno-spk) please consider [donating via PayPal](https://paypal.me/oznu) ❤️*
+
+            </span>
+
+  build:
+    name: Build Packages
+    needs: release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - SPK_PLATFORM: braswell
+            SPK_ARCH: x86_64
+            NODE_ARCH: x64
+          - SPK_PLATFORM: evansport
+            SPK_ARCH: i686
+            NODE_ARCH: x64
+          - SPK_PLATFORM: rtd1296
+            SPK_ARCH: armv8
+            NODE_ARCH: arm64
+          - SPK_PLATFORM: armada37xx
+            SPK_ARCH: armada37xx
+            NODE_ARCH: arm64
+          - SPK_PLATFORM: armada38x
+            SPK_ARCH: armada38x
+            NODE_ARCH: armv7l
+          - SPK_PLATFORM: alpine
+            SPK_ARCH: armv7
+            NODE_ARCH: armv7l
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Toolchain
+      run: |
+        sudo -E ./.ci/setup-toolchain.sh
+      env:
+        SPK_PLATFORM: ${{ matrix.SPK_PLATFORM }}
+
+    - name: Build Package
+      run: |
+        sudo -E ./.ci/build-package.sh
+      env:
+        SPK_PLATFORM: ${{ matrix.SPK_PLATFORM }}
+        SPK_ARCH: ${{ matrix.SPK_ARCH }}
+        SPK_PACKAGE_VERSION: ${{ github.event.inputs.version }}
+        NODE_ARCH: ${{ matrix.NODE_ARCH }}
+
+    - uses: AButler/upload-release-assets@v3.0
+      with:
+        files: homebridge-${{ matrix.SPK_PLATFORM }}-${{ github.event.inputs.version }}.spk
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        release-tag: ${{ github.event.inputs.version }}
+
+  update-spk-repo:
+    name: Publish to Repo
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-node@v3
+      with:
+        node-version: lts/*
+
+    - name: Get the release
+      id: get_release
+      uses: cardinalby/git-get-release-action@1.2.4
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      with:
+        tag: ${{ github.event.inputs.version }}
+
+    - name: Download release assets
+      uses: dsaltares/fetch-gh-release-asset@0.0.8
+      with:
+        version: ${{ steps.get_release.outputs.id }}
+        regex: true
+        file: "homebridge-.*\\.spk"
+        target: "repo/spks/"
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build Repo Generator
+      run: |
+        cd repo
+        npm install
+
+    - name: Generate Repo JSON
+      run: |
+        cd repo
+        node index.js
+
+    - name: Upload synology-spk-repo.json
+      id: upload-synology-spk-repo-json 
+      uses: AButler/upload-release-assets@v3.0
+      with:
+        files: repo/spks/synology-spk-repo.json
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        release-tag: ${{ github.event.inputs.version }}
+
+    - name: Upload Repo JSON to S3
+      run: |
+        cat repo/spks/synology-spk-repo.json | jq
+        aws s3 cp repo/spks/synology-spk-repo.json s3://repo.homebridge.io/
+      env:
+        AWS_EC2_METADATA_DISABLED: true
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

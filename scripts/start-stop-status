@@ -1,0 +1,31 @@
+#!/bin/bash
+case "$1" in
+    start)
+        if [ "${EUID}" -eq 0 ]; then
+            sudo -u docker synosystemctl start pkguser-docker
+        else
+            synosystemctl start pkguser-docker
+        fi
+        ;;
+    stop)
+        if [ "${EUID}" -eq 0 ]; then
+            sudo -u docker synosystemctl stop pkguser-docker
+        else
+            synosystemctl stop pkguser-docker
+        fi
+        ;;
+    status)
+        if [ "${EUID}" -eq 0 ]; then
+            sudo -u docker synosystemctl get-active-status pkguser-docker
+        else
+            synosystemctl get-active-status pkguser-docker
+        fi
+        ;;
+    log)
+        echo ""
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|status}" >&2
+        exit 1
+        ;;
+esac

@@ -1,0 +1,21 @@
+#!/bin/sh
+
+if [ "$(id -u)" -ne 0 ]; then
+  echo "This command must be executed as root or with sudo."
+  exit 1
+fi
+
+# change to working directory
+cd "$(readlink -f /var/packages/docker/shares/docker)"
+
+# default shell user
+SHELL_USER=docker
+
+# get the shell user's home directory
+SHELL_USER_HOME=$(eval echo ~$SHELL_USER)
+
+printf "Entering Homebridge Shell. To exit type 'exit'.\n\n"
+
+cd "$(readlink -f /var/packages/docker/shares/docker)"
+
+exec sudo --user "$SHELL_USER" env "HOME=$SHELL_USER_HOME" bash --rcfile /var/packages/docker/target/app/bashrc-hb-shell

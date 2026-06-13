@@ -1,0 +1,16 @@
+{
+    ".url": {
+        "appkins-org.docker": {
+            "title": "Docker",
+            "desc": "Docker UI",
+            "icon": "images/icon_256.png",
+            "type": "url",
+            "protocol": "http",
+            "port": "9443",
+            "url": "/",
+            "allUsers": true,
+            "grantPrivilege": "local"
+        }
+    }
+}
+

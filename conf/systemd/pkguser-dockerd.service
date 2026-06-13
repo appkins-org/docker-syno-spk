@@ -1,0 +1,28 @@
+[Unit]
+Description=Docker Application Container Engine
+Documentation=https://docs.docker.com
+IgnoreOnIsolate=true
+DefaultDependencies=no
+
+[Service]
+Type=notify
+ExecStart=/var/packages/ContainerManager/target/usr/bin/dockerd --config-file /var/packages/ContainerManager/etc/dockerd.json
+ExecReload=/bin/kill -s HUP $MAINPID
+LimitNOFILE=1048576
+# Having non-zero Limit*s causes performance problems due to accounting overhead
+# in the kernel. We recommend using cgroups to do container-local accounting.
+LimitNPROC=infinity
+LimitCORE=infinity
+# Uncomment TasksMax if your systemd version supports it.
+# Only systemd 226 and above support this version.
+#TasksMax=infinity
+# set delegate yes so that systemd does not reset the cgroups of docker containers
+Delegate=yes
+# kill only the docker process, not all processes in the cgroup
+KillMode=process
+# restart the docker process if it exits prematurely
+Restart=always
+RestartSec=2
+TimeoutSec=0
+StartLimitBurst=3
+StartLimitInterval=60s

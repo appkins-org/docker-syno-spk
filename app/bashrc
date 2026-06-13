@@ -1,0 +1,22 @@
+#!/bin/sh
+
+GREEN='\033[1;32m'
+CYAN='\033[0;36m'
+NC='\033[0m'
+
+PS1="\[\e]0;\u@\h: \w\a\]${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w \$\[\033[00m\] "
+
+printf "${CYAN}Note: This is a restricted shell, sudo cannot be used here.${NC}\n\n"
+
+printf "${GREEN}Homebridge Terminal for Synology DSM${NC}\n\n"
+
+printf "${BOLD}Node.js Version:${NC} ${GREEN}$(node -v)${NC}\n"
+printf "${BOLD}Node.js Path:${NC} ${GREEN}$(which node)${NC}\n"
+printf "${BOLD}Plugin Path:${NC} ${GREEN}${UIX_CUSTOM_PLUGIN_PATH}${NC}\n\n"
+
+printf "${BOLD}Update Node.js:${NC} ${GREEN}hb-service update-node${NC}\n\n"
+
+printf "${BOLD}Install Plugin:${NC} ${GREEN}hb-service add docker-plugin-name${NC}\n"
+printf "${BOLD}Remove Plugin:${NC} ${GREEN}hb-service remove docker-plugin-name${NC}\n\n"
+
+alias sudo='echo "ERROR: sudo / root access is not allowed by the docker service account. See https://kb.synology.com/en-id/DSM/tutorial/How_to_login_to_DSM_with_root_permission_via_SSH_Telnet " # '

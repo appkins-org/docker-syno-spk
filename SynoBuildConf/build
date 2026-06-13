@@ -1,0 +1,21 @@
+#!/bin/bash
+# Copyright (c) 2000-2021 Synology Inc. All rights reserved.
+
+case ${MakeClean} in
+    [Yy][Ee][Ss])
+	# extract node
+	tar xzf "node-linux-${NODE_ARCH}.tar.gz" -C app/ --strip-components=1 --no-same-owner
+	export npm_config_prefix=$(pwd)/app
+    export npm_config_ignore_scripts=true
+    # this is running under the toolchain's copy of x64 Node.js, not the Node.js that was just extracted
+    npm install -g homebridge-config-ui-x@latest
+        ;;
+esac
+
+case ${CleanOnly} in
+    [Yy][Ee][Ss])
+        return
+        ;;
+esac
+
+make ${MAKE_FLAGS}
