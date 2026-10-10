@@ -15,7 +15,7 @@ jobs:
     steps:
     - name: Get the release
       id: get_release
-      uses: cardinalby/git-get-release-action@1.2.4
+      uses: cardinalby/git-get-release-action@1.2.6
       env:
         GITHUB_TOKEN: ${{ github.token }}
       with:
