@@ -134,7 +134,7 @@ jobs:
         SPK_PACKAGE_VERSION: ${{ github.event.inputs.version }}
         NODE_ARCH: ${{ matrix.NODE_ARCH }}
 
-    - uses: AButler/upload-release-assets@v3.0
+    - uses: AButler/upload-release-assets@v4.0.0
       with:
         files: homebridge-${{ matrix.SPK_PLATFORM }}-${{ github.event.inputs.version }}.spk
         repo-token: ${{ secrets.GITHUB_TOKEN }}
@@ -180,7 +180,7 @@ jobs:
 
     - name: Upload synology-spk-repo.json
       id: upload-synology-spk-repo-json 
-      uses: AButler/upload-release-assets@v3.0
+      uses: AButler/upload-release-assets@v4.0.0
       with:
         files: repo/spks/synology-spk-repo.json
         repo-token: ${{ secrets.GITHUB_TOKEN }}
