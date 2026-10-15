@@ -160,7 +160,7 @@ jobs:
         tag: ${{ github.event.inputs.version }}
 
     - name: Download release assets
-      uses: dsaltares/fetch-gh-release-asset@0.0.8
+      uses: dsaltares/fetch-gh-release-asset@1.1.2
       with:
         version: ${{ steps.get_release.outputs.id }}
         regex: true
